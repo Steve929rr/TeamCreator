@@ -1,0 +1,83 @@
+/* Margin left for export button */
+.margin-left-10 {
+  margin-left: 10px;
+}
+/* Margin right for label */
+.margin-right-20 {
+  margin-right: 20px;
+}
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  max-width: 600px;
+  margin: auto;
+}
+.container {
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 8px;
+}
+.name-input-section {
+  margin-bottom: 15px;
+}
+.name-list {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+.name-tag {
+  display: inline-block;
+  background: #007bff;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+  margin: 3px 5px 3px 0;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.name-tag .remove {
+  margin-left: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.team {
+  border: 1px solid #007bff;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  background: #f0f8ff;
+}
+label {
+  font-weight: bold;
+}
+/* Dark mode styles */
+body.dark-mode {
+  background: #181a1b;
+  color: #e0e0e0;
+}
+.container.dark-mode {
+  border-color: #444;
+  background: #23272b;
+}
+.name-tag.dark-mode {
+  background: #444;
+  color: #e0e0e0;
+}
+.team.dark-mode {
+  border-color: #444;
+  background: #222;
+  color: #e0e0e0;
+}
+/* Inline style replacements */
+.float-right {
+  float: right;
+}
+.clear-both {
+  clear: both;
+}
+.margin-top-15 {
+  margin-top: 15px;
+}
+.margin-top-20 {
+  margin-top: 20px;
+}

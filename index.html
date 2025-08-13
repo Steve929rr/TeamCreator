@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container" id="mainContainer">
+    <h1>Team Generator</h1>
+  <label class="margin-right-20">
+      <input type="checkbox" id="genderEqual" />
+      Gender Equal Teams
+    </label>
+    <label class="float-right">
+      <input type="checkbox" id="darkModeToggle" />
+      Dark Mode
+    </label>
+    <div class="clear-both"></div>
+    <div id="inputSections" class="margin-top-15">
+      <!-- One or two name input sections inserted here -->
+    </div>
+    <label for="teamCount">Number of Teams:</label>
+    <input type="number" id="teamCount" min="1" value="2" onchange="renderTeamNameInputs()" />
+    <div id="teamNamesSection" class="margin-top-15"></div>
+    <button onclick="generateTeams()">Generate Teams</button>
+  <button id="exportPdfBtn" class="margin-left-10">Export to PDF</button>
+    <div id="teamDisplay" class="margin-top-20"></div>
+  </div>
+
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const inputSections = document.getElementById('inputSections');
+    const genderEqualCheckbox = document.getElementById('genderEqual');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const mainContainer = document.getElementById('mainContainer');
+
+    // Store names separately
+    let menNames = [];
+    let womenNames = [];
+    // Team names
+    let teamNames = [];
+
+    function createNameInputSection(labelText, gender) {
+      const section = document.createElement('div');
+      section.className = 'name-input-section';
+
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      section.appendChild(label);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Enter name and hit Enter';
+      input.style.marginLeft = '10px';
+      input.id = gender + 'Input';
+      section.appendChild(input);
+
+      const nameList = document.createElement('div');
+      nameList.className = 'name-list';
+      nameList.id = gender + 'List';
+      section.appendChild(nameList);
+
+      // Handle enter key to add name
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.trim() !== '') {
+          addName(gender, input.value.trim());
+          input.value = '';
+        }
+      });
+
+      return section;
+    }
+
+    function addName(gender, name) {
+      if (gender === 'men') {
+        if (!menNames.includes(name)) menNames.push(name);
+        renderNameList('men');
+      } else if (gender === 'women') {
+        if (!womenNames.includes(name)) womenNames.push(name);
+        renderNameList('women');
+      } else {
+        // single list mode
+        if (!menNames.includes(name)) menNames.push(name);
+        renderNameList('men');
+      }
+    }
+
+    function removeName(gender, name) {
+      if (gender === 'men') {
+        menNames = menNames.filter(n => n !== name);
+        renderNameList('men');
+      } else if (gender === 'women') {
+        womenNames = womenNames.filter(n => n !== name);
+        renderNameList('women');
+      }
+    }
+
+    function renderNameList(gender) {
+      const listDiv = document.getElementById(gender + 'List');
+      listDiv.innerHTML = '';
+      let arr = gender === 'men' ? menNames : womenNames;
+      arr.forEach(name => {
+        const tag = document.createElement('span');
+        tag.className = 'name-tag';
+        if (document.body.classList.contains('dark-mode')) tag.classList.add('dark-mode');
+        tag.textContent = name;
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'remove';
+        removeBtn.textContent = '×';
+        removeBtn.title = 'Remove name';
+        removeBtn.onclick = () => removeName(gender, name);
+        tag.appendChild(removeBtn);
+        listDiv.appendChild(tag);
+      });
+    }
+
+    function setupInputs() {
+      inputSections.innerHTML = '';
+      menNames = [];
+      womenNames = [];
+
+      if (genderEqualCheckbox.checked) {
+        inputSections.appendChild(createNameInputSection('Men', 'men'));
+        inputSections.appendChild(createNameInputSection('Women', 'women'));
+      } else {
+        inputSections.appendChild(createNameInputSection('Participants', 'men'));
+      }
+    }
+
+    genderEqualCheckbox.addEventListener('change', () => {
+      setupInputs();
+    });
+
+    // Initialize
+    setupInputs();
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function renderTeamNameInputs() {
+      const teamCount = parseInt(document.getElementById('teamCount').value);
+      const section = document.getElementById('teamNamesSection');
+      section.innerHTML = '';
+      teamNames = [];
+      for (let i = 0; i < teamCount; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Team ${i + 1} Name`;
+        input.className = 'team-name-input';
+        input.value = `Team ${i + 1}`;
+        input.oninput = () => teamNames[i] = input.value;
+        section.appendChild(input);
+        teamNames[i] = input.value;
+      }
+    }
+
+    // Initial render
+    renderTeamNameInputs();
+
+    function generateTeams() {
+      const teamCount = parseInt(document.getElementById('teamCount').value);
+      let teams = Array.from({ length: teamCount }, () => []);
+      // Use custom team names if available
+      if (!teamNames || teamNames.length !== teamCount) {
+        teamNames = Array.from({ length: teamCount }, (_, i) => `Team ${i + 1}`);
+      }
+      if (genderEqualCheckbox.checked) {
+        if (menNames.length === 0 || womenNames.length === 0) {
+          alert('Please enter at least one name for both men and women.');
+          return;
+        }
+        if (menNames.length % teamCount !== 0 || womenNames.length % teamCount !== 0) {
+          alert('For gender balanced teams, the number of men and women should be divisible by the number of teams.');
+          return;
+        }
+        const shuffledMen = shuffle([...menNames]);
+        const shuffledWomen = shuffle([...womenNames]);
+
+        shuffledMen.forEach((name, i) => {
+          teams[i % teamCount].push(name + ' (M)');
+        });
+        shuffledWomen.forEach((name, i) => {
+          teams[i % teamCount].push(name + ' (W)');
+        });
+      } else {
+        if (menNames.length === 0) {
+          alert('Please enter at least one participant name.');
+          return;
+        }
+        const shuffledNames = shuffle([...menNames]);
+        shuffledNames.forEach((name, i) => {
+          teams[i % teamCount].push(name);
+        });
+      }
+
+      const teamDisplay = document.getElementById('teamDisplay');
+      teamDisplay.innerHTML = '';
+      teams.forEach((team, idx) => {
+        const div = document.createElement('div');
+        div.className = 'team';
+        if (document.body.classList.contains('dark-mode')) div.classList.add('dark-mode');
+        div.innerHTML = `<strong>${teamNames[idx]}:</strong><br>${team.join('<br>')}`;
+        teamDisplay.appendChild(div);
+      });
+    }
+
+    // Dark mode toggle logic
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener('change', () => {
+        document.body.classList.toggle('dark-mode', darkModeToggle.checked);
+        mainContainer.classList.toggle('dark-mode', darkModeToggle.checked);
+        renderNameList('men');
+        renderNameList('women');
+        generateTeams();
+      });
+    }
+
+    // Export to PDF logic
+    document.getElementById('exportPdfBtn').onclick = function() {
+      const teamCount = parseInt(document.getElementById('teamCount').value);
+      let teams = Array.from({ length: teamCount }, () => []);
+      if (genderEqualCheckbox.checked) {
+        const shuffledMen = shuffle([...menNames]);
+        const shuffledWomen = shuffle([...womenNames]);
+        shuffledMen.forEach((name, i) => {
+          teams[i % teamCount].push(name + ' (M)');
+        });
+        shuffledWomen.forEach((name, i) => {
+          teams[i % teamCount].push(name + ' (W)');
+        });
+      } else {
+        const shuffledNames = shuffle([...menNames]);
+        shuffledNames.forEach((name, i) => {
+          teams[i % teamCount].push(name);
+        });
+      }
+      if (!teamNames || teamNames.length !== teamCount) {
+        teamNames = Array.from({ length: teamCount }, (_, i) => `Team ${i + 1}`);
+      }
+      // Create PDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      for (let i = 0; i < teamCount; i++) {
+        doc.setFontSize(14);
+        doc.text(`${teamNames[i]}:`, 10, y);
+        y += 8;
+        doc.setFontSize(12);
+        teams[i].forEach(member => {
+          doc.text(`- ${member}`, 15, y);
+          y += 7;
+        });
+        y += 5;
+        if (y > 270 && i < teamCount - 1) {
+          doc.addPage();
+          y = 10;
+        }
+      }
+      doc.save('teams.pdf');
+    };
+  </script>
+</body>
+</html>
